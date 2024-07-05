@@ -89,10 +89,10 @@ class PromptExecutor {
         return resp
     }
     async handleWithTiming(req) {
-        const startTime = performance.now();
+        const startTime = performance.now()
         await this.handle(req)
-        const endTime = performance.now();
-        const timeTaken = endTime - startTime;
+        const endTime = performance.now()
+        const timeTaken = endTime - startTime
         document.getElementById('timeTaken').innerText = `Results generated in ${timeTaken}ms`
     }
 }
@@ -137,21 +137,28 @@ const printers = {
 
 
 document.addEventListener('DOMContentLoaded', async (event) => {
-    const inputField = document.getElementById('userInput');
-    const submitButton = document.getElementById('submitButton');
-    const outputDiv = document.getElementById('output');
+    const inputField = document.getElementById('userInput')
 
-    const printerSelect = document.getElementById('printerSelect');
-    const executorSelect = document.getElementById('executorSelect');
-    const prompterSelect = document.getElementById('prompterSelect');
+    const printerSelect = document.getElementById('printerSelect')
+    const executorSelect = document.getElementById('executorSelect')
+    const prompterSelect = document.getElementById('prompterSelect')
 
     let session = null
 
-    if (await ai.canCreateTextSession() != 'no') {
-        session = await ai.createTextSession();
+    try {
+        if (await ai.canCreateTextSession() != 'no') {
+            session = await ai.createTextSession();
+        }
+        else {
+            console.info('could not create session')
+            return
+        }
     }
-    else {
-        console.info('could not create session')
+    catch {
+        document.getElementById('mainContent').innerHTML = `<section class="mb-4">
+                <h2 class="text-2xl font-semibold">Your browser does not support the prompt AI API yet</h2>
+                <p class="mt-2">...</p>
+            </section>`
         return
     }
     let printer = null
