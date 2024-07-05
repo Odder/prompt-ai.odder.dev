@@ -157,7 +157,6 @@ document.addEventListener('DOMContentLoaded', async (event) => {
     catch {
         document.getElementById('mainContent').innerHTML = `<section class="mb-4">
                 <h2 class="text-2xl font-semibold">Your browser does not support the prompt AI API yet</h2>
-                <p class="mt-2">...</p>
             </section>`
         return
     }
