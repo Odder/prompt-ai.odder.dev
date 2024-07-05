@@ -1,14 +1,10 @@
 class Prompt {
-    name = 'test'
-    description = 'not implemented yet'
     generate(req) {
         return `Hello world!`
     }
 }
 
 class Emoji extends Prompt {
-    name = 'Emoji summariser'
-    description = 'Creates an emoji summary for you'
     generate(req) {
         return `System: Predict up to 5 emojis as a response to a comment. Output emojis.
         User: This is amazing!
@@ -21,8 +17,6 @@ class Emoji extends Prompt {
 }
 
 class EmojiStories extends Prompt {
-    name = 'Emoji Stories'
-    description = 'Creates an emoji summary for you'
     generate(req) {
         return `System: Summarise movies, stories, series, messages only using emojis
         User: The titanic movie
@@ -33,20 +27,18 @@ class EmojiStories extends Prompt {
 }
 
 class TranslateFrench extends Prompt {
-    name = 'French translator'
-    description = 'translates a text to french'
     generate(req) {
         return `System: Translate texts to French.
-        User: hi!
+        User: "hi!"
         Assistant: Bonjour !
-        User: ${req}
+        User: "apples taste good"
+        Assistant: les pommes ont bon goût
+        User: "${req}"
         Assistant: `
     }
 }
 
 class PythonFunction extends Prompt {
-    name = 'Python function'
-    description = 'writes code for you'
     generate(req) {
         return `System: Write python code. Should be concise and without code comments.
         User: fibonacci sequence
@@ -69,8 +61,6 @@ def calculate_midpoint(x1, y1, x2, y2, x3, y3):
 }
 
 class Naked extends Prompt {
-    name = 'Vanilla'
-    description = 'no prompt'
     generate(req) {
         return req
     }
@@ -93,7 +83,7 @@ class PromptExecutor {
         await this.handle(req)
         const endTime = performance.now()
         const timeTaken = endTime - startTime
-        document.getElementById('timeTaken').innerText = `Results generated in ${timeTaken}ms`
+        document.getElementById('timeTaken').innerText = `Results generated in ${timeTaken ^ 0}ms`
     }
 }
 
@@ -102,7 +92,7 @@ class StreamExecutor extends PromptExecutor {
         let resp = ''
         const stream = await this.session.promptStreaming(req)
         for await (const response of stream) {
-            this.printer.print(response)
+            this.printer.print(await response)
             resp = await response
         }
         return resp
@@ -146,10 +136,7 @@ document.addEventListener('DOMContentLoaded', async (event) => {
     let session = null
 
     try {
-        if (await ai.canCreateTextSession() != 'no') {
-            session = await ai.createTextSession();
-        }
-        else {
+        if (await ai.canCreateTextSession() === 'no') {
             console.info('could not create session')
             return
         }
@@ -160,41 +147,31 @@ document.addEventListener('DOMContentLoaded', async (event) => {
             </section>`
         return
     }
+
     let printer = null
     let prompt = null
     let executor = null
 
-    const setExecutor = () => {
+    const setExecutor = async () => {
+        if (session) session.destroy()
+        session = await ai.createTextSession()
         printer = printers[printerSelect.value]
         prompt = prompts[prompterSelect.value]
         executor = new executors[executorSelect.value](session, printer)
-        console.log(`Updated executor`, printer, prompt, executor)
     }
 
-    setExecutor()
-
     const handleInput = async () => {
-        console.log('handling input')
         const userInput = inputField.value;
         if (userInput.length > 0) {
             executor.handleWithTiming(prompt.generate(userInput))
         }
     };
 
-    // submitButton.addEventListener('click', async () => {
-    //     handleInput()
-    // });
-    inputField.addEventListener('change', async () => {
-        handleInput()
-    })
+    setExecutor()
 
-    printerSelect.addEventListener('change', async () => {
-        setExecutor()
-    })
-    prompterSelect.addEventListener('change', async () => {
-        setExecutor()
-    })
-    executorSelect.addEventListener('change', async () => {
-        setExecutor()
-    })
+    inputField.addEventListener('change', handleInput)
+
+    printerSelect.addEventListener('change', setExecutor)
+    prompterSelect.addEventListener('change', setExecutor)
+    executorSelect.addEventListener('change', setExecutor)
 });
